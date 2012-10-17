@@ -1,2 +1,8 @@
+ARM-example-projects
 
-... blank (for now) ...
+### all code is in branches, master will contain nothing (at least for now) ###
+
+Complete projects for GCC compiler, Eclipse IDE, GDB Debugger and OpenOCD GDB server
+
+Package and info about them can be found on Freddie Chopin's website:
+http://www.freddiechopin.info/

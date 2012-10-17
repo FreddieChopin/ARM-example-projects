@@ -1,13 +1,14 @@
 /** \file config.h
  * \brief Basic configuration of the project
  * \author Freddie Chopin, http://www.freddiechopin.info/
- * \date 2012-01-07
+ * \date 2012-04-06
  */
 
 /******************************************************************************
-* project: stm32_blink_led
-* chip: STM32F103RB
-* compiler: arm-none-eabi-gcc (Sourcery CodeBench Lite 2011.09-69) 4.6.1
+* project: lpc1769_blink_led
+* chip: LPC1769
+* compiler: arm-none-eabi-gcc (GNU Tools for ARM Embedded Processors) 4.6.2
+* 	20110921 (release) [ARM/embedded-4_6-branch revision 182083]
 ******************************************************************************/
 
 #ifndef CONFIG_H_
@@ -21,15 +22,15 @@
 +=============================================================================+
 */
 
-#define CRYSTAL								8000000ul	///< quartz crystal resonator which is connected to the chip
-#define FREQUENCY							72000000ul	///< desired target frequency of the core
+#define CRYSTAL								12000000ul	///< quartz crystal resonator which is connected to the chip
+#define FREQUENCY							120000000ul	///< desired target frequency of the core
 
-#define LED_GPIO							GPIOB		///< GPIO port to which the LED is connected
-#define LED_pin								1			///< pin number of the LED
+#define LED_GPIO							LPC_GPIO0	///< GPIO port to which the LED is connected
+#define LED_pin								0			///< pin number of the LED
 
 #define LED									(1 << LED_pin)
-#define LED_ODR								LED_GPIO->ODR	///< output register for the LED
-#define LED_bb								bitband_t m_BITBAND_PERIPH(&LED_ODR, LED_pin)	///< bit-band "variable" to directly handle the pin
+#define LED_FIOPIN							LED_GPIO->FIOPIN	///< output register for the LED
+#define LED_bb								bitband_t BITBAND(&LED_FIOPIN, LED_pin)	///< bit-band "variable" to directly handle the pin
 
 /*
 +=============================================================================+

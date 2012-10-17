@@ -1,13 +1,16 @@
 /******************************************************************************
 * author: Freddie Chopin, http://www.freddiechopin.info/
-* file: STM32F103xB_rom.ld
-* last change: 2012-01-07
+* file: LPC1758_59_67_68_69_rom.ld
+* last change: 2012-04-07
 *
-* chip: STM32F103xB
-* compiler: arm-none-eabi-gcc (Sourcery CodeBench Lite 2011.09-69) 4.6.1
+* chip: LPC1758 / LPC1759 / LPC1767 / LPC1768 / LPC1769
+* compiler: arm-none-eabi-gcc (GNU Tools for ARM Embedded Processors) 4.6.2
+* 	20110921 (release) [ARM/embedded-4_6-branch revision 182083]
 *
 * description:
-* Linker script for STM32F103xB chip (128kB Flash, 20kB SRAM).
+* Linker script for LPC1758, LPC1759, LPC1767, LPC1768 and LPC1769 chips (512kB
+* Flash, 32kB SRAM, 16kB AHB SRAM0 and 16kB AHB SRAM1). Only main block of SRAM
+* (32kB) is used.
 ******************************************************************************/
 
 SEARCH_DIR(.);
@@ -44,8 +47,10 @@ PROVIDE(__process_stack_size = __process_stack_size);
 
 MEMORY
 {
-	rom (rx)	: org = 0x08000000, len = 128k
-	ram (rwx)	: org = 0x20000000, len = 20k
+	rom (rx)		: org = 0x00000000, len = 512k
+	ram (rwx)		: org = 0x10000000, len = 32k
+	ahb_sram0 (rwx)	: org = 0x2007C000, len = 16k
+	ahb_sram1 (rwx)	: org = 0x20080000, len = 16k
 }
 
 __rom_start = ORIGIN(rom);
@@ -56,6 +61,14 @@ __ram_start = ORIGIN(ram);
 __ram_size = LENGTH(ram);
 __ram_end = __ram_start + __ram_size;
 
+__ahb_sram0_start = ORIGIN(ahb_sram0);
+__ahb_sram0_size = LENGTH(ahb_sram0);
+__ahb_sram0_end = __ahb_sram0_start + __ahb_sram0_size;
+
+__ahb_sram1_start = ORIGIN(ahb_sram1);
+__ahb_sram1_size = LENGTH(ahb_sram1);
+__ahb_sram1_end = __ahb_sram1_start + __ahb_sram1_size;
+
 PROVIDE(__rom_start = __rom_start);
 PROVIDE(__rom_size = __rom_size);
 PROVIDE(__rom_end = __rom_end);
@@ -63,6 +76,14 @@ PROVIDE(__rom_end = __rom_end);
 PROVIDE(__ram_start = __ram_start);
 PROVIDE(__ram_size = __ram_size);
 PROVIDE(__ram_end = __ram_end);
+
+PROVIDE(__ahb_sram0_start = __ahb_sram0_start);
+PROVIDE(__ahb_sram0_size = __ahb_sram0_size);
+PROVIDE(__ahb_sram0_end = __ahb_sram0_end);
+
+PROVIDE(__ahb_sram1_start = __ahb_sram1_start);
+PROVIDE(__ahb_sram1_size = __ahb_sram1_size);
+PROVIDE(__ahb_sram1_end = __ahb_sram1_end);
 
 /*
 +=============================================================================+

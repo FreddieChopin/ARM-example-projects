@@ -1,19 +1,19 @@
 /** \file gpio.c
  * \brief GPIO driver.
- * \details GPIO default configuration and function for configuring a pin
+ * \details Function for configuring a GPIO pin
  * \author Freddie Chopin, http://www.freddiechopin.info/
- * \date 2012-01-07
+ * \date 2012-04-07
  */
 
 /******************************************************************************
-* chip: STM32F1x
-* compiler: arm-none-eabi-gcc (Sourcery CodeBench Lite 2011.09-69) 4.6.1
+* chip: LPC175x / LPC176x
+* compiler: arm-none-eabi-gcc (GNU Tools for ARM Embedded Processors) 4.6.2
+* 	20110921 (release) [ARM/embedded-4_6-branch revision 182083]
 *
 * prefix: gpio_
 *
 * available global functions:
-* 	void gpio_init(void)
-* 	void gpio_pin_cfg(GPIO_TypeDef *port_ptr, uint32_t pin, uint32_t mode_cnf_value)
+* 	void gpio_pin_cfg(LPC_GPIO_TypeDef *gpio_ptr, uint32_t pin, uint32_t configuration)
 *
 * available local functions:
 *
@@ -28,11 +28,20 @@
 
 #include <stdint.h>
 
-#include "inc/stm32f10x.h"
-
-#include "hdr/hdr_gpio.h"
+#include "inc/LPC17xx.h"
 
 #include "gpio.h"
+
+/*
++=============================================================================+
+| local definitions
++=============================================================================+
+*/
+
+#define GPIO_GET_SEL(combination)			(((combination) >> 0) & 0xFF)
+#define GPIO_GET_MODE(combination)			(((combination) >> 8) & 0xFF)
+#define GPIO_GET_MODE_OD(combination)		(((combination) >> 16) & 0xFF)
+#define GPIO_GET_DIR(combination)			(((combination) >> 24) & 0xFF)
 
 /*
 +=============================================================================+
@@ -53,70 +62,55 @@
 */
 
 /*------------------------------------------------------------------------*//**
-* \brief GPIO initialization.
-* \details Enables AFIO, all GPIO ports and sets them to input with pull-downs.
-*//*-------------------------------------------------------------------------*/
-
-void gpio_init(void)
-{
-	RCC->APB2ENR = RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN |
-			RCC_APB2ENR_IOPDEN | RCC_APB2ENR_IOPEEN | RCC_APB2ENR_AFIOEN;	// enable all GPIOs and AFIO
-
-	// set all ports to input with pull-down
-	GPIOA->CRL = 0x88888888;
-	GPIOA->CRH = 0x88888888;
-	GPIOA->ODR = 0;
-	GPIOB->CRL = 0x88888888;
-	GPIOB->CRH = 0x88888888;
-	GPIOB->ODR = 0;
-	GPIOC->CRL = 0x88888888;
-	GPIOC->CRH = 0x88888888;
-	GPIOC->ODR = 0;
-	GPIOD->CRL = 0x88888888;
-	GPIOD->CRH = 0x88888888;
-	GPIOD->ODR = 0;
-	GPIOE->CRL = 0x88888888;
-	GPIOE->CRH = 0x88888888;
-	GPIOE->ODR = 0;
-}
-
-/*------------------------------------------------------------------------*//**
 * \brief Configures pin.
 * \details Configures one pin in one port.
 *
-* \param [in] port_ptr points to the configuration structure of desired port
-* \param [in] pin selects one pin, [0,15]
-* \param [in] mode_cnf_value is a value of MODE and CNF which will be set for
-* selected pin, {GPIO_CRx_MODE_CNF_IN_ANALOG_value,
-* GPIO_CRx_MODE_CNF_IN_FLOATING_value, GPIO_CRx_MODE_CNF_IN_PULL_U_D_value,
-* GPIO_CRx_MODE_CNF_OUT_PP_2M_value, GPIO_CRx_MODE_CNF_OUT_PP_10M_value,
-* GPIO_CRx_MODE_CNF_OUT_PP_50M_value, GPIO_CRx_MODE_CNF_OUT_OD_2M_value,
-* GPIO_CRx_MODE_CNF_OUT_OD_10M_value, GPIO_CRx_MODE_CNF_OUT_OD_50M_value,
-* GPIO_CRx_MODE_CNF_ALT_PP_2M_value, GPIO_CRx_MODE_CNF_ALT_PP_10M_value,
-* GPIO_CRx_MODE_CNF_ALT_PP_50M_value, GPIO_CRx_MODE_CNF_ALT_OD_2M_value,
-* GPIO_CRx_MODE_CNF_ALT_OD_10M_value, GPIO_CRx_MODE_CNF_ALT_OD_50M_value} or
-* use m_GPIO_MODE_CNF_value(mode, cnf) macro
+* \param [in] gpio_ptr points to the configuration structure of desired GPIO
+* port
+* \param [in] pin selects one pin, [0,31]
+* \param [in] configuration is a combined value of PINSEL, PINMODE, PINMODE_OD,
+* and FIODIR register bitfields, allowed values:
+* {GPIO_IN_{PULL_UP, REPEATER, FLOATING, PULL_DOWN},
+* GPIO_OUT_{PP, OD}, GPIO_OUT_OD_{PULL_UP, REPEATER, PULL_DOWN},
+* GPIO_{ALT1, ALT2, ALT3}_{PP, OD}_{PULL_UP, REPEATER, FLOATING, PULL_DOWN}}
 *//*-------------------------------------------------------------------------*/
 
-void gpio_pin_cfg(GPIO_TypeDef *port_ptr, uint32_t pin, uint32_t mode_cnf_value)
+void gpio_pin_cfg(LPC_GPIO_TypeDef *gpio_ptr, uint32_t pin, uint32_t configuration)
 {
-	volatile uint32_t *cr_ptr;
-	uint32_t cr_value;
+	uint32_t gpio, sel, mode, mode_od, dir;
+	volatile uint32_t *pinsel, *pinmode, *pinmode_od;
 
-	cr_ptr = &port_ptr->CRL;				// configuration of pins [0,7] is in CRL
+	// calculate the number of GPIO that should be configured
+	gpio = (((uint32_t)gpio_ptr) - LPC_GPIO_BASE) / (LPC_GPIO1_BASE - LPC_GPIO0_BASE);
 
-	if (pin >= 8)							// is pin in [8; 15]?
-	{										// configuration of pins [8,15] is in CRH
-		cr_ptr++;							// advance to next struct element CRL -> CRH
-		pin -= 8;							// crop the pin number
-	}
+	// get address of appropriate PINSEL register
+	pinsel = &(&LPC_PINCON->PINSEL0)[gpio * 2 + pin / 16];
 
-	cr_value = *cr_ptr;						// localize the CRL / CRH value
+	sel = *pinsel;							// localize
+	sel &=~ (LPC_PINCON_PINSELx_mask << (pin * 2));	// clear current setting
+	sel |= (GPIO_GET_SEL(configuration) << (pin * 2));	// apply new setting
+	*pinsel = sel;							// save back
 
-	cr_value &= ~(GPIO_CRx_MODE_CNF_mask << (pin * 4));	// clear the MODE and CNF fields (now that pin is an analog input)
-	cr_value |= (mode_cnf_value << (pin * 4));	// save new MODE and CNF value for desired pin
+	// get address of appropriate PINMODE register
+	pinmode = &(&LPC_PINCON->PINMODE0)[gpio * 2 + pin / 16];
 
-	*cr_ptr = cr_value;						// save localized value to CRL / CRL
+	mode = *pinmode;						// localize
+	mode &=~ (LPC_PINCON_PINMODEx_mask << (pin * 2));	// clear current setting
+	mode |= (GPIO_GET_MODE(configuration) << (pin * 2));	// apply new setting
+	*pinmode = mode;						// save back
+
+	// get address of appropriate PINMODE_OD register
+	pinmode_od = &(&LPC_PINCON->PINMODE_OD0)[gpio];
+
+	mode_od = *pinmode_od;					// localize
+	mode_od &=~ (LPC_PINCON_PINMODE_ODx_mask << pin);	// clear current setting
+	mode_od |= (GPIO_GET_MODE_OD(configuration) << pin);	// apply new setting
+	*pinmode_od = mode_od;					// save back
+
+	dir = gpio_ptr->FIODIR;					// localize
+	dir &=~ (LPC_GPIO_FIODIR_mask << pin);	// clear current setting
+	dir |= (GPIO_GET_DIR(configuration) << pin);	// apply new setting
+	gpio_ptr->FIODIR = dir;					// save back
 }
 
 /*

@@ -2,7 +2,7 @@
 # ARM makefile
 #
 # author: Freddie Chopin, http://www.freddiechopin.info/
-# last change: 2012-01-07
+# last change: 2012-04-07
 #
 # this makefile is based strongly on many examples found in the network
 #=============================================================================#
@@ -19,29 +19,32 @@ AS = $(TOOLCHAIN)gcc -x assembler-with-cpp
 OBJCOPY = $(TOOLCHAIN)objcopy
 OBJDUMP = $(TOOLCHAIN)objdump
 SIZE = $(TOOLCHAIN)size
-RM = cs-rm -f
+RM = rm -f
 
 #=============================================================================#
 # project configuration
 #=============================================================================#
 
 # project name
-PROJECT = stm32_blink_led
+PROJECT = lpc1769_blink_led
 
 # core type
 CORE = cortex-m3
 
 # linker script
-LD_SCRIPT = STM32F103xB_rom.ld
+LD_SCRIPT = LPC1758_59_67_68_69_rom.ld
 
 # output folder (absolute or relative path, leave empty for in-tree compilation)
 OUT_DIR = out
 
-# C++ definitions (e.g. "-Dsymbol_with_value=0xDEAD -Dsymbol_without_value")
-CXX_DEFS = -DSTM32F10X_MD
+# global definitions for C++, C and ASM (e.g. "symbol_with_value=0xDEAD symbol_without_value")
+GLOBAL_DEFS =
+
+# C++ definitions
+CXX_DEFS =
 
 # C definitions
-C_DEFS = -DSTM32F10X_MD
+C_DEFS =
 
 # ASM definitions
 AS_DEFS =
@@ -149,7 +152,7 @@ endif
 # destructors is compiled; if -nostartfiles option for linker is added then C++
 # initialization / finalization code is not linked
 ifeq ($(USES_CXX), 1)
-	AS_DEFS += -D__USES_CXX
+	AS_DEFS += __USES_CXX
 else
 	LD_FLAGS += -nostartfiles
 endif
@@ -165,6 +168,10 @@ OBJS = $(AS_OBJS) $(C_OBJS) $(CXX_OBJS) $(USER_OBJS)
 DEPS = $(OBJS:.o=.d)
 INC_DIRS_F = -I. $(patsubst %, -I%, $(INC_DIRS))
 LIB_DIRS_F = $(patsubst %, -L%, $(LIB_DIRS))
+GLOBAL_DEFS_F = $(patsubst %, -D%, $(GLOBAL_DEFS))
+CXX_DEFS_F = $(patsubst %, -D%, $(CXX_DEFS))
+C_DEFS_F = $(patsubst %, -D%, $(C_DEFS))
+AS_DEFS_F = $(patsubst %, -D%, $(AS_DEFS))
 
 ELF = $(OUT_DIR_F)$(PROJECT).elf
 HEX = $(OUT_DIR_F)$(PROJECT).hex
@@ -173,9 +180,9 @@ LSS = $(OUT_DIR_F)$(PROJECT).lss
 DMP = $(OUT_DIR_F)$(PROJECT).dmp
 
 # format final flags for tools, request dependancies for C++, C and asm
-CXX_FLAGS_F = $(CORE_FLAGS) $(OPTIMIZATION) $(CXX_WARNINGS) $(CXX_FLAGS)  $(CXX_DEFS) -MD -MP -MF $(OUT_DIR_F)$(@F:.o=.d) $(INC_DIRS_F)
-C_FLAGS_F = $(CORE_FLAGS) $(OPTIMIZATION) $(C_WARNINGS) $(C_FLAGS) $(C_DEFS) -MD -MP -MF $(OUT_DIR_F)$(@F:.o=.d) $(INC_DIRS_F)
-AS_FLAGS_F = $(CORE_FLAGS) $(AS_FLAGS) $(AS_DEFS) -MD -MP -MF $(OUT_DIR_F)$(@F:.o=.d) $(INC_DIRS_F)
+CXX_FLAGS_F = $(CORE_FLAGS) $(OPTIMIZATION) $(CXX_WARNINGS) $(CXX_FLAGS) $(GLOBAL_DEFS_F) $(CXX_DEFS_F) -MD -MP -MF $(OUT_DIR_F)$(@F:.o=.d) $(INC_DIRS_F)
+C_FLAGS_F = $(CORE_FLAGS) $(OPTIMIZATION) $(C_WARNINGS) $(C_FLAGS) $(GLOBAL_DEFS_F) $(C_DEFS_F) -MD -MP -MF $(OUT_DIR_F)$(@F:.o=.d) $(INC_DIRS_F)
+AS_FLAGS_F = $(CORE_FLAGS) $(AS_FLAGS) $(GLOBAL_DEFS_F) $(AS_DEFS_F) -MD -MP -MF $(OUT_DIR_F)$(@F:.o=.d) $(INC_DIRS_F)
 LD_FLAGS_F = $(CORE_FLAGS) $(LD_FLAGS) $(LIB_DIRS_F)
 
 #contents of output directory

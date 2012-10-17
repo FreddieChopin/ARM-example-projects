@@ -1,12 +1,13 @@
 /** \file hdr_bitband.h
  * \brief Header for bit-banding
  * \author Freddie Chopin, http://www.freddiechopin.info/
- * \date 2012-01-07
+ * \date 2012-03-18
  */
 
 /******************************************************************************
-* chip: ARMv7-M (Cortex-M3)
-* compiler: arm-none-eabi-gcc (Sourcery CodeBench Lite 2011.09-69) 4.6.1
+* chip: ARMv7-M(E) (Cortex-M3 / Cortex-M4)
+* compiler: arm-none-eabi-gcc (GNU Tools for ARM Embedded Processors) 4.6.2
+* 	20110921 (release) [ARM/embedded-4_6-branch revision 182083]
 ******************************************************************************/
 
 #ifndef HDR_BITBAND_H_

@@ -1,13 +1,15 @@
 /******************************************************************************
 * author: Freddie Chopin, http://www.freddiechopin.info/
-* file: STM32F103xB_rom.ld
-* last change: 2012-01-07
+* file: STM32F4xxxG_rom.ld
+* last change: 2012-03-24
 *
-* chip: STM32F103xB
-* compiler: arm-none-eabi-gcc (Sourcery CodeBench Lite 2011.09-69) 4.6.1
+* chip: STM32F4xxxG
+* compiler: arm-none-eabi-gcc (GNU Tools for ARM Embedded Processors) 4.6.2
+* 	20110921 (release) [ARM/embedded-4_6-branch revision 182083]
 *
 * description:
-* Linker script for STM32F103xB chip (128kB Flash, 20kB SRAM).
+* Linker script for STM32F4xxxG chip (1MB Flash, 112kB SRAM, 16kB aux SRAM,
+* 64kB CCM RAM and 4kB backup SRAM). Only main block of SRAM (112kB) is used.
 ******************************************************************************/
 
 SEARCH_DIR(.);
@@ -44,8 +46,11 @@ PROVIDE(__process_stack_size = __process_stack_size);
 
 MEMORY
 {
-	rom (rx)	: org = 0x08000000, len = 128k
-	ram (rwx)	: org = 0x20000000, len = 20k
+	rom (rx)		: org = 0x08000000, len = 1M
+	ram (rwx)		: org = 0x20000000, len = 112k
+	aux_ram (rwx)	: org = 0x2001C000, len = 16k
+	ccm_ram (rw)	: org = 0x10000000, len = 64k
+	bkp_ram (rwx)	: org = 0x40024000, len = 4k
 }
 
 __rom_start = ORIGIN(rom);
@@ -56,6 +61,18 @@ __ram_start = ORIGIN(ram);
 __ram_size = LENGTH(ram);
 __ram_end = __ram_start + __ram_size;
 
+__aux_ram_start = ORIGIN(aux_ram);
+__aux_ram_size = LENGTH(aux_ram);
+__aux_ram_end = __aux_ram_start + __aux_ram_size;
+
+__ccm_ram_start = ORIGIN(ccm_ram);
+__ccm_ram_size = LENGTH(ccm_ram);
+__ccm_ram_end = __ccm_ram_start + __ccm_ram_size;
+
+__bkp_ram_start = ORIGIN(bkp_ram);
+__bkp_ram_size = LENGTH(bkp_ram);
+__bkp_ram_end = __bkp_ram_start + __bkp_ram_size;
+
 PROVIDE(__rom_start = __rom_start);
 PROVIDE(__rom_size = __rom_size);
 PROVIDE(__rom_end = __rom_end);
@@ -63,6 +80,18 @@ PROVIDE(__rom_end = __rom_end);
 PROVIDE(__ram_start = __ram_start);
 PROVIDE(__ram_size = __ram_size);
 PROVIDE(__ram_end = __ram_end);
+
+PROVIDE(__aux_ram_start = __aux_ram_start);
+PROVIDE(__aux_ram_size = __aux_ram_size);
+PROVIDE(__aux_ram_end = __aux_ram_end);
+
+PROVIDE(__ccm_ram_start = __ccm_ram_start);
+PROVIDE(__ccm_ram_size = __ccm_ram_size);
+PROVIDE(__ccm_ram_end = __ccm_ram_end);
+
+PROVIDE(__bkp_ram_start = __bkp_ram_start);
+PROVIDE(__bkp_ram_size = __bkp_ram_size);
+PROVIDE(__bkp_ram_end = __bkp_ram_end);
 
 /*
 +=============================================================================+

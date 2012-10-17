@@ -1,13 +1,13 @@
 /******************************************************************************
 * author: Freddie Chopin, http://www.freddiechopin.info/
-* file: STM32F103xB_rom.ld
-* last change: 2012-01-07
+* file: LPC11x14_30x_rom.ld
+* last change: 2012-01-08
 *
-* chip: STM32F103xB
+* chip: LPC11(C)14/30x
 * compiler: arm-none-eabi-gcc (Sourcery CodeBench Lite 2011.09-69) 4.6.1
 *
 * description:
-* Linker script for STM32F103xB chip (128kB Flash, 20kB SRAM).
+* Linker script for LPC11(C)14/30x (32kB Flash, 8kB SRAM).
 ******************************************************************************/
 
 SEARCH_DIR(.);
@@ -44,8 +44,8 @@ PROVIDE(__process_stack_size = __process_stack_size);
 
 MEMORY
 {
-	rom (rx)	: org = 0x08000000, len = 128k
-	ram (rwx)	: org = 0x20000000, len = 20k
+	rom (rx)	: org = 0x00000000, len = 32k
+	ram (rwx)	: org = 0x10000000, len = 8k
 }
 
 __rom_start = ORIGIN(rom);

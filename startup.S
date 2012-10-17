@@ -1,13 +1,13 @@
 /******************************************************************************
 * author: Freddie Chopin, http://www.freddiechopin.info/
 * file: startup.S
-* last change: 2012-01-07
+* last change: 2012-01-08
 *
-* chip: ARMv7-M (Cortex-M3)
+* chip: ARMv6-M (Cortex-M0)
 * compiler: arm-none-eabi-gcc (Sourcery CodeBench Lite 2011.09-69) 4.6.1
 *
 * description:
-* ARMv7-M (Cortex-M3) assembly startup code
+* ARMv6-M (Cortex-M0) assembly startup code
 ******************************************************************************/
 
 /*
@@ -20,7 +20,7 @@
 
 /*
 +=============================================================================+
-| ARMv7-M (Cortex-M3) startup code
+| ARMv6-M (Cortex-M0) startup code
 +=============================================================================+
 */
 
@@ -44,7 +44,7 @@ Reset_Handler:
 
 /*
 +-----------------------------------------------------------------------------+
-| Thread mode uses process stack (PSP) and is privileged
+| Thread mode uses process stack (PSP). Thread mode on ARMv6-M is privileged.
 +-----------------------------------------------------------------------------+
 */
 
@@ -71,11 +71,11 @@ Reset_Handler:
     ldr		r2, =__data_start
     ldr		r3, =__data_end
 
-1:	cmp		r2, r3
-	ittt	lo
-	ldrlo	r0, [r1], #4
-	strlo	r0, [r2], #4
-	blo		1b
+	b		2f
+1:	ldmia	r1!, {r0}
+	stmia	r2!, {r0}
+2:	cmp		r2, r3
+	bne		1b
 
 /*
 +-----------------------------------------------------------------------------+
@@ -87,10 +87,11 @@ Reset_Handler:
 	ldr		r1, =__bss_start
 	ldr		r2, =__bss_end
 
-1:	cmp		r1, r2
-	itt		lo
-	strlo	r0, [r1], #4
-	blo		1b
+	b		2f
+1:	stmia	r1!, {r0}
+2:	cmp		r1, r2
+	bne		1b
+
 
 /*
 +-----------------------------------------------------------------------------+

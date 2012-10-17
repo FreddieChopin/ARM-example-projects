@@ -26,22 +26,22 @@ RM = cs-rm -f
 #=============================================================================#
 
 # project name
-PROJECT = stm32_blink_led
+PROJECT = stm32cl_blink_led
 
 # core type
 CORE = cortex-m3
 
 # linker script
-LD_SCRIPT = STM32F103xB_rom.ld
+LD_SCRIPT = STM32F107xB_rom.ld
 
 # output folder (absolute or relative path, leave empty for in-tree compilation)
 OUT_DIR = out
 
 # C++ definitions (e.g. "-Dsymbol_with_value=0xDEAD -Dsymbol_without_value")
-CXX_DEFS = -DSTM32F10X_MD
+CXX_DEFS = -DSTM32F10X_CL
 
 # C definitions
-C_DEFS = -DSTM32F10X_MD
+C_DEFS = -DSTM32F10X_CL
 
 # ASM definitions
 AS_DEFS =

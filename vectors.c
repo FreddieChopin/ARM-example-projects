@@ -1,14 +1,12 @@
 /** \file vectors.c
- * \brief STM32F1x low- / medium- / high-density vector table and
- * __Default_Handler()
- * \details STM32F1x low- / medium- / high-density vector table and
- * __Default_Handler()
+ * \brief STM32 (connectivity line) vector table and __Default_Handler()
+ * \details STM32 (connectivity line) vector table and __Default_Handler()
  * \author Freddie Chopin, http://www.freddiechopin.info/
  * \date 2012-01-07
  */
 
 /******************************************************************************
-* chip: STM32F1x low- / medium- / high-density
+* chip: STM32F105x / STM32F107x
 * compiler: arm-none-eabi-gcc (Sourcery CodeBench Lite 2011.09-69) 4.6.1
 ******************************************************************************/
 
@@ -129,17 +127,17 @@ void DMA1_Channel7_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__De
 // ADC1 and ADC2 global interrupt
 void ADC1_2_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
-// USB high priority or CAN TX interrupts
-void USB_HP_CAN_TX_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+// CAN1 TX interrupt
+void CAN1_TX_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
-// USB low priority or CAN RX0 interrupts
-void USB_LP_CAN_RX0_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+// CAN1 RX0 interrupt
+void CAN1_RX0_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
-// CAN RX1 interrupt
-void CAN_RX1_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+// CAN1 RX1 interrupt
+void CAN1_RX1_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
-// CAN SCE interrupt
-void CAN_SCE_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+// CAN1 SCE interrupt
+void CAN1_SCE_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
 // EXTI Line[9:5] interrupts
 void EXTI9_5_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
@@ -198,29 +196,29 @@ void EXTI15_10_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Defaul
 // RTC alarm through EXTI line interrupt
 void RTCAlarm_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
-// USB wakeup from suspend through EXTI line interrupt
-void USBWakeup_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+// USB On-The-Go FS Wakeup through EXTI line interrupt
+void OTG_FS_WKUP_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
-// TIM8 break interrupt
-void TIM8_BRK_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+// Reserved 0xEC
+void __Reserved_0xEC_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
-// TIM8 update interrupt
-void TIM8_UP_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+// Reserved 0xF0
+void __Reserved_0xF0_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
-// TIM8 trigger and commutation interrupts
-void TIM8_TRG_COM_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+// Reserved 0xF4
+void __Reserved_0xF4_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
-// TIM8 capture compare interrupt
-void TIM8_CC_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+// Reserved 0xF8
+void __Reserved_0xF8_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
-// ADC3 global interrupt
-void ADC3_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+// Reserved 0xFC
+void __Reserved_0xFC_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
-// FSMC global interrupt
-void FSMC_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+// Reserved 0x100
+void __Reserved_0x100_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
-// SDIO global interrupt
-void SDIO_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+// Reserved 0x104
+void __Reserved_0x104_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
 // TIM5 global interrupt
 void TIM5_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
@@ -249,8 +247,32 @@ void DMA2_Channel2_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__De
 // DMA2 Channel3 global interrupt
 void DMA2_Channel3_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
-// DMA2 Channel4 and DMA2 Channel5 global interrupts
-void DMA2_Channel4_5_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+// DMA2 Channel4 global interrupt
+void DMA2_Channel4_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+
+// DMA2 Channel5 global interrupt
+void DMA2_Channel5_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+
+// Ethernet global interrupt
+void ETH_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+
+// Ethernet Wakeup through EXTI line interrupt
+void ETH_WKUP_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+
+// CAN2 TX interrupt
+void CAN2_TX_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+
+// CAN2 RX0 interrupt
+void CAN2_RX0_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+
+// CAN2 RX1 interrupt
+void CAN2_RX1_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+
+// CAN2 SCE interrupt
+void CAN2_SCE_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
+
+// USB On The Go FS global interrupt
+void OTG_FS_IRQHandler(void) __attribute__ ((interrupt, weak, alias("__Default_Handler")));
 
 /*
 +=============================================================================+
@@ -298,10 +320,10 @@ void (* const vectors[])(void) __attribute__ ((section(".vectors"))) = {
 		DMA1_Channel6_IRQHandler,			// DMA1 Channel6 global interrupt
 		DMA1_Channel7_IRQHandler,			// DMA1 Channel7 global interrupt
 		ADC1_2_IRQHandler,					// ADC1 and ADC2 global interrupt
-		USB_HP_CAN_TX_IRQHandler,			// USB high priority or CAN TX interrupts
-		USB_LP_CAN_RX0_IRQHandler,			// USB low priority or CAN RX0 interrupts
-		CAN_RX1_IRQHandler,					// CAN RX1 interrupt
-		CAN_SCE_IRQHandler,					// CAN SCE interrupt
+		CAN1_TX_IRQHandler,					// CAN1 TX interrupt
+		CAN1_RX0_IRQHandler,				// CAN1 RX0 interrupt
+		CAN1_RX1_IRQHandler,				// CAN1 RX1 interrupt
+		CAN1_SCE_IRQHandler,				// CAN1 SCE interrupt
 		EXTI9_5_IRQHandler,					// EXTI Line[9:5] interrupts
 		TIM1_BRK_IRQHandler,				// TIM1 break interrupt
 		TIM1_UP_IRQHandler,					// TIM1 update interrupt
@@ -321,14 +343,14 @@ void (* const vectors[])(void) __attribute__ ((section(".vectors"))) = {
 		USART3_IRQHandler,					// USART3 global interrupt
 		EXTI15_10_IRQHandler,				// EXTI Line[15:10] interrupts
 		RTCAlarm_IRQHandler,				// RTC alarm through EXTI line interrupt
-		USBWakeup_IRQHandler,				// USB wakeup from suspend through EXTI line interrupt
-		TIM8_BRK_IRQHandler,				// TIM8 break interrupt
-		TIM8_UP_IRQHandler,					// TIM8 update interrupt
-		TIM8_TRG_COM_IRQHandler,			// TIM8 trigger and commutation interrupts
-		TIM8_CC_IRQHandler,					// TIM8 capture compare interrupt
-		ADC3_IRQHandler,					// ADC3 global interrupt
-		FSMC_IRQHandler,					// FSMC global interrupt
-		SDIO_IRQHandler,					// SDIO global interrupt
+		OTG_FS_WKUP_IRQHandler,				// USB On-The-Go FS Wakeup through EXTI line interrupt
+		__Reserved_0xEC_IRQHandler,			// Reserved 0xEC
+		__Reserved_0xF0_IRQHandler,			// Reserved 0xF0
+		__Reserved_0xF4_IRQHandler,			// Reserved 0xF4
+		__Reserved_0xF8_IRQHandler,			// Reserved 0xF8
+		__Reserved_0xFC_IRQHandler,			// Reserved 0xFC
+		__Reserved_0x100_IRQHandler,		// Reserved 0x100
+		__Reserved_0x104_IRQHandler,		// Reserved 0x104
 		TIM5_IRQHandler,					// TIM5 global interrupt
 		SPI3_IRQHandler,					// SPI3 global interrupt
 		UART4_IRQHandler,					// UART4 global interrupt
@@ -338,7 +360,15 @@ void (* const vectors[])(void) __attribute__ ((section(".vectors"))) = {
 		DMA2_Channel1_IRQHandler,			// DMA2 Channel1 global interrupt
 		DMA2_Channel2_IRQHandler,			// DMA2 Channel2 global interrupt
 		DMA2_Channel3_IRQHandler,			// DMA2 Channel3 global interrupt
-		DMA2_Channel4_5_IRQHandler 			// DMA2 Channel4 and DMA2 Channel5 global interrupts
+		DMA2_Channel4_IRQHandler,	 		// DMA2 Channel4 global interrupt
+		DMA2_Channel5_IRQHandler, 			// DMA2 Channel5 global interrupt
+		ETH_IRQHandler,						// Ethernet global interrupt
+		ETH_WKUP_IRQHandler,				// Ethernet Wakeup through EXTI line interrupt
+		CAN2_TX_IRQHandler,					// CAN2 TX interrupt
+		CAN2_RX0_IRQHandler,				// CAN2 RX0 interrupt
+		CAN2_RX1_IRQHandler,				// CAN2 RX1 interrupt
+		CAN2_SCE_IRQHandler,				// CAN2 SCE interrupt
+		OTG_FS_IRQHandler					// USB On The Go FS global interrupt
 };
 
 /******************************************************************************

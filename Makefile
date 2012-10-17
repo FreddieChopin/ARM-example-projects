@@ -2,7 +2,7 @@
 # ARM makefile
 #
 # author: Freddie Chopin, http://www.freddiechopin.info/
-# last change: 2012-01-07
+# last change: 2012-01-08
 #
 # this makefile is based strongly on many examples found in the network
 #=============================================================================#
@@ -26,22 +26,22 @@ RM = cs-rm -f
 #=============================================================================#
 
 # project name
-PROJECT = stm32_blink_led
+PROJECT = lpc2103_blink_led
 
 # core type
-CORE = cortex-m3
+CORE = arm7tdmi-s
 
 # linker script
-LD_SCRIPT = STM32F103xB_rom.ld
+LD_SCRIPT = LPC2103_rom.ld
 
 # output folder (absolute or relative path, leave empty for in-tree compilation)
 OUT_DIR = out
 
 # C++ definitions (e.g. "-Dsymbol_with_value=0xDEAD -Dsymbol_without_value")
-CXX_DEFS = -DSTM32F10X_MD
+CXX_DEFS =
 
 # C definitions
-C_DEFS = -DSTM32F10X_MD
+C_DEFS =
 
 # ASM definitions
 AS_DEFS =
@@ -125,7 +125,7 @@ endif
 #=============================================================================#
 
 # core flags
-CORE_FLAGS = -mcpu=$(CORE) -mthumb
+CORE_FLAGS = -mcpu=$(CORE)
 
 # flags for C++ compiler
 CXX_FLAGS = -std=$(CXX_STD) -g -ggdb3 -fno-rtti -fno-exceptions -fverbose-asm -Wa,-ahlms=$(OUT_DIR_F)$(notdir $(<:.$(CXX_EXT)=.lst))

@@ -1,19 +1,19 @@
 /** \file main.c
- * \brief Sample STM32 project
- * \details This file holds a very basic code for STM32F103RB. This code
- * enables all GPIO ports, configures Flash wait-states and enables the PLL
- * to achieve the highest allowed frequency for STM32F103RB (72MHz). Main
- * code block just blinks the LED. The LED port and pin are defined in
+ * \brief Sample ARM project
+ * \details This file holds a very basic ARM code for LPC2103. This code
+ * initializes the Fast GPIOs, starts the MAM (Memory Acceleration Module) and
+ * enables the PLL to achieve the highest allowed frequency for LPC2103 (72MHz).
+ * Main code block just blinks the LED. The LED port and pin are defined in
  * config.h file. Target core frequency and quartz crystal resonator
  * frequency are defined there as well.
  *
  * \author Freddie Chopin, http://www.freddiechopin.info/
- * \date 2012-01-07
+ * \date 2012-01-08
  */
 
 /******************************************************************************
-* project: stm32_blink_led
-* chip: STM32F103RB
+* project: lpc2103_blink_led
+* chip: LPC2103
 * compiler: arm-none-eabi-gcc (Sourcery CodeBench Lite 2011.09-69) 4.6.1
 *
 * prefix: (none)
@@ -22,7 +22,8 @@
 * 	int main(void)
 *
 * available local functions:
-* 	static void flash_latency(uint32_t frequency)
+* 	static void mam_start(uint32_t frequency)
+* 	static void pll_feed(void)
 * 	static uint32_t pll_start(uint32_t crystal, uint32_t frequency)
 * 	static void system_init(void)
 *
@@ -37,14 +38,12 @@
 
 #include <stdint.h>
 
-#include "inc/stm32f10x.h"
+#include "inc/LPC214x.h"
 
 #include "config.h"
 
-#include "hdr/hdr_rcc.h"
-#include "hdr/hdr_gpio.h"
-
-#include "gpio.h"
+#include "hdr/hdr_scb.h"
+#include "hdr/hdr_mam.h"
 
 /*
 +=============================================================================+
@@ -58,7 +57,8 @@
 +=============================================================================+
 */
 
-static void flash_latency(uint32_t frequency);
+static void mam_start(uint32_t frequency);
+static void pll_feed(void);
 static uint32_t pll_start(uint32_t crystal, uint32_t frequency);
 static void system_init(void);
 
@@ -81,14 +81,14 @@ int main(void)
 	system_init();
 	pll_start(CRYSTAL, FREQUENCY);
 
-	gpio_pin_cfg(LED_GPIO, LED_pin, GPIO_CRx_MODE_CNF_OUT_PP_10M_value);
+	LED_DIR |= LED;							// LED pin - output
 
 	while (1)
 	{
 		for (count = 0; count < count_max; count++);	// delay
-		LED_bb = 1;
+		LED_SET = LED;									// change LED state
 		for (count = 0; count < count_max; count++);	// delay
-		LED_bb = 0;
+		LED_CLR = LED;									// change LED state
 	}
 }
 
@@ -99,36 +99,49 @@ int main(void)
 */
 
 /*------------------------------------------------------------------------*//**
-* \brief Configures Flash latency
-* \details Configures Flash latency (wait-states) which allows the chip to run
-* at higher speeds
+* \brief Start MAM
+* \details Enables the Memory Acceleration Module in LPC2103, which allows the
+* CPU to work full-speed out of Flash.
 *
 * \param [in] frequency defines the target frequency of the core
 *//*-------------------------------------------------------------------------*/
 
-static void flash_latency(uint32_t frequency)
+static void mam_start(uint32_t frequency)
 {
-	uint32_t wait_states;
+	uint32_t latency;
 
-	if (frequency < 24000000ul)				// 0 wait states for core speed below 24MHz
-		wait_states = 0;
-	else if (frequency < 48000000ul)		// 1 wait state for core speed between 24MHz and 48MHz
-		wait_states = 1;
-	else									// 2 wait states for core speed over 48MHz
-		wait_states = 2;
+	if (frequency < 20000000)				// 1 cycle latency for core speed below 20MHz
+		latency = 1;
+	else if (frequency < 40000000)			// 2 cycle latency for core speed between 20MHz and 40MHz
+		latency = 2;
+	else									// 3 cycle latency for core speed over 40MHz
+		latency = 3;
 
-	FLASH->ACR |= wait_states;				// set the latency
+	MAMTIM = latency;						// set the latency
+	MAMCR = MAMCR_MODE_FULL;				// enable MAM
+}
+
+/*------------------------------------------------------------------------*//**
+* \brief PLL feed sequence
+* \details Issues a special "PLL feed sequence" which validates the changes to
+* PLL control registers
+*//*-------------------------------------------------------------------------*/
+
+static void pll_feed(void)
+{
+	PLLFEED = PLLFEED_FIRST;
+	PLLFEED = PLLFEED_SECOND;
 }
 
 /*------------------------------------------------------------------------*//**
 * \brief Starts the PLL
 * \details Configure and enable PLL to achieve some frequency with some crystal.
-* Before the speed change Flash latency is configured via flash_latency(). PLL
-* parameter mul is based on both function parameters. The PLL is set up,
-* started and connected. APB1 clock ratio is set to 1:2 (max freq = 36MHz)
+* Before the speed change MAM is enabled via mam_start(). PLL parameters m and p
+* are based on function parameters. The PLL is set up, started and connected.
+* Finally, APB clock ratio is set to 1:1.
 *
 * \param [in] crystal is the frequency of the crystal resonator connected to the
-* STM32F103RB
+* LPC2103
 * \param [in] frequency is the desired target frequency after enabling the PLL
 *
 * \return real frequency that was set
@@ -136,39 +149,43 @@ static void flash_latency(uint32_t frequency)
 
 static uint32_t pll_start(uint32_t crystal, uint32_t frequency)
 {
-	uint32_t mul;
+	uint32_t m, p = 0, fcco;
 
-	RCC_CR_HSEON_bb = 1;					// enable HSE clock
-	flash_latency(frequency);				// configure Flash latency for desired frequency
+	mam_start(frequency);					// reconfigure/enable MAM before changing speed
 
-	mul = frequency / crystal;				// PLL multiplier calculation
+	m = frequency / crystal;				// M is the PLL multiplier
+	fcco = m * crystal * 2;					// FCCO is the internal PLL frequency
 
-	if (mul > 16)							// max PLL multiplier is 16
-		mul = 16;
+	frequency = crystal * m;
 
-	frequency = crystal * mul;
+	while (fcco < 156000000)
+	{
+		fcco *= 2;
+		p++;								// find P which gives FCCO in the allowed range (over 156MHz)
+	}
 
-	RCC->CFGR |= ((mul - 2) << RCC_CFGR_PLLMUL_bit) | RCC_CFGR_PLLSRC | RCC_CFGR_PPRE1_DIV2;	// configuration of PLL: HSE x (mul), APB1 clk = /2
+	PLLCFG = (m - 1) | (p << PLLCFG_PSEL_bit);	// set basic PLL parameters
+	pll_feed();
+	PLLCON = PLLCON_PLLE;					// enable PLL
+	pll_feed();
+	while (!(PLLSTAT & PLLSTAT_PLOCK));		// wait for PLL lock
+	PLLCON = PLLCON_PLLE | PLLCON_PLLC;		// connect PLL as the system clock
+	pll_feed();
 
-	while (!RCC_CR_HSERDY_bb);				// wait for stable clock
-
-	RCC_CR_PLLON_bb = 1;					// enable PLL
-	while (!RCC_CR_PLLRDY_bb);				// wait for PLL lock
-
-	RCC->CFGR |= RCC_CFGR_SW_PLL;			// change SYSCLK to PLL
-	while (((RCC->CFGR) & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL);	// wait for switch
+	APBDIV = APBDIV_APBDIV_1;				// set APB clock ratio to 1:1
 
 	return frequency;
 }
 
 /*------------------------------------------------------------------------*//**
-* \brief Initializes system
-* \details Enables all GPIO ports
+* \brief Initialize system
+* \details Enables the Fast GPIOs and ensures the vectors are taken from Flash
 *//*-------------------------------------------------------------------------*/
 
 static void system_init(void)
 {
-	gpio_init();
+	SCS = SCS_GPIO0M;						// enable Fast I/O
+	MEMMAP = MEMMAP_MAP_FLASH;				// vectors in Flash
 }
 
 /*

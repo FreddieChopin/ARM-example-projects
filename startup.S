@@ -1,13 +1,13 @@
 /******************************************************************************
 * author: Freddie Chopin, http://www.freddiechopin.info/
 * file: startup.S
-* last change: 2012-01-07
+* last change: 2012-01-08
 *
-* chip: ARMv7-M (Cortex-M3)
+* chip: ARMv4 (ARM7TDMI)
 * compiler: arm-none-eabi-gcc (Sourcery CodeBench Lite 2011.09-69) 4.6.1
 *
 * description:
-* ARMv7-M (Cortex-M3) assembly startup code
+* ARMv4 (ARM7TDMI) assembly startup code
 ******************************************************************************/
 
 /*
@@ -16,41 +16,41 @@
 +=============================================================================+
 */
 
-#include "hdr/hdr_special_registers.h"
+#include "hdr/hdr_cpsr.h"
 
 /*
 +=============================================================================+
-| ARMv7-M (Cortex-M3) startup code
+| ARMv4 (ARM7TDMI) startup code
 +=============================================================================+
 */
 
 .text
 .balign 2
 .syntax unified
-.thumb
-.thumb_func
+.arm
+.func   Reset_Handler
 .global Reset_Handler
 
 Reset_Handler:
 
 /*
 +-----------------------------------------------------------------------------+
-| Initialize the process stack pointer
+| Stack setup
 +-----------------------------------------------------------------------------+
 */
 
-	ldr		r0, =__process_stack_end
-	msr		PSP, r0
-
-/*
-+-----------------------------------------------------------------------------+
-| Thread mode uses process stack (PSP) and is privileged
-+-----------------------------------------------------------------------------+
-*/
-
-	movs	r0, #CONTROL_ALTERNATE_STACK
-	msr		CONTROL, r0
-	isb
+	// after reset the core is in Supervisor mode with IRQ & FIQ disabled
+	ldr   sp, =__supervisor_stack_end;				// set the stack for Supervisor mode
+	msr   CPSR_c, #FIQ_MODE | CPSR_I | CPSR_F		// switch to FIQ mode, IRQ & FIQ disabled
+	ldr   sp, =__fiq_stack_end;						// set the stack for FIQ mode
+	msr   CPSR_c, #IRQ_MODE | CPSR_I | CPSR_F 		// switch to IRQ mode, IRQ & FIQ disabled
+	ldr   sp, =__irq_stack_end;						// set the stack for IRQ mode
+	msr   CPSR_c, #ABORT_MODE | CPSR_I | CPSR_F		// switch to Abort mode, IRQ & FIQ disabled
+	ldr   sp, =__abort_stack_end;					// set the stack for Abort mode
+	msr   CPSR_c, #UNDEFINED_MODE | CPSR_I | CPSR_F	// switch to Undefined mode, IRQ & FIQ disabled
+	ldr   sp, =__undefined_stack_end;				// set the stack for Undefined mode
+	msr   CPSR_c, #SYSTEM_MODE					 	// switch to System mode, IRQ & FIQ enabled
+	ldr   sp, =__user_system_stack_end;				// set the stack for User and System mode
 
 /*
 +-----------------------------------------------------------------------------+
@@ -59,7 +59,8 @@ Reset_Handler:
 */
 
 	ldr		r0, =low_level_init_0
-	blx		r0
+	mov		lr, pc
+	bx		r0
 
 /*
 +-----------------------------------------------------------------------------+
@@ -67,15 +68,13 @@ Reset_Handler:
 +-----------------------------------------------------------------------------+
 */
 
-	ldr		r1, =__data_init_start
-    ldr		r2, =__data_start
-    ldr		r3, =__data_end
-
-1:	cmp		r2, r3
-	ittt	lo
-	ldrlo	r0, [r1], #4
-	strlo	r0, [r2], #4
-	blo		1b
+	ldr     r1, =__data_init_start
+	ldr     r2, =__data_start
+	ldr     r3, =__data_end
+1:	cmp     r2, r3
+	ldrlo   r0, [r1], #4
+	strlo   r0, [r2], #4
+	blo     1b
 
 /*
 +-----------------------------------------------------------------------------+
@@ -83,14 +82,12 @@ Reset_Handler:
 +-----------------------------------------------------------------------------+
 */
 
-	movs	r0, #0
-	ldr		r1, =__bss_start
-	ldr		r2, =__bss_end
-
-1:	cmp		r1, r2
-	itt		lo
-	strlo	r0, [r1], #4
-	blo		1b
+	mov     r0, #0
+	ldr     r1, =__bss_start
+	ldr     r2, =__bss_end
+1:	cmp     r1, r2
+	strlo   r0, [r1], #4
+	blo     1b
 
 /*
 +-----------------------------------------------------------------------------+
@@ -99,7 +96,8 @@ Reset_Handler:
 */
 #ifdef __USES_CXX
 	ldr		r0, =__libc_init_array
-	blx		r0
+	mov		lr, pc
+	bx		r0
 #endif
 
 /*
@@ -109,7 +107,8 @@ Reset_Handler:
 */
 
 	ldr		r0, =low_level_init_1
-	blx		r0
+	mov		lr, pc
+	bx		r0
 
 /*
 +-----------------------------------------------------------------------------+
@@ -118,7 +117,8 @@ Reset_Handler:
 */
 
 	ldr		r0, =main
-	blx		r0
+	mov		lr, pc
+	bx		r0
 
 /*
 +-----------------------------------------------------------------------------+
@@ -127,7 +127,8 @@ Reset_Handler:
 */
 #ifdef __USES_CXX
 	ldr		r0, =__libc_fini_array
-	blx		r0
+	mov		lr, pc
+	bx		r0
 #endif
 
 /*
@@ -137,6 +138,8 @@ Reset_Handler:
 */
 
 	b		.
+
+.endfunc
 
 /*
 +=============================================================================+
@@ -148,12 +151,14 @@ Reset_Handler:
 .text
 .balign 2
 .syntax unified
-.thumb
-.thumb_func
+.arm
+.func   __default_low_level_init
 .global __default_low_level_init
 
 __default_low_level_init:
 	bx		lr
+
+.endfunc
 
 /*
 +=============================================================================+

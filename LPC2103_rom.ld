@@ -1,13 +1,13 @@
 /******************************************************************************
 * author: Freddie Chopin, http://www.freddiechopin.info/
-* file: STM32F103xB_rom.ld
-* last change: 2012-01-07
+* file: LPC2103_rom.ld
+* last change: 2012-01-08
 *
-* chip: STM32F103xB
+* chip: LPC2103
 * compiler: arm-none-eabi-gcc (Sourcery CodeBench Lite 2011.09-69) 4.6.1
 *
 * description:
-* Linker script for STM32F103xB chip (128kB Flash, 20kB SRAM).
+* Linker script for LPC2103 chip (32kB Flash, 8kB SRAM).
 ******************************************************************************/
 
 SEARCH_DIR(.);
@@ -27,14 +27,19 @@ OUTPUT_ARCH(arm);
 +=============================================================================+
 */
 
-/* Handler mode (core exceptions / interrupts) can use only main stack */
-/* Thread mode can use main stack (default) or process stack - selected in CONTROL special register */
+__user_system_stack_size = 1024;
+__fiq_stack_size = 0;
+__irq_stack_size = 0;
+__supervisor_stack_size = 0;
+__abort_stack_size = 0;
+__undefined_stack_size = 0;
 
-__main_stack_size = 0;
-__process_stack_size = 1024;
-
-PROVIDE(__main_stack_size = __main_stack_size);
-PROVIDE(__process_stack_size = __process_stack_size);
+PROVIDE(__user_system_stack_size = __user_system_stack_size);
+PROVIDE(__fiq_stack_size = __fiq_stack_size);
+PROVIDE(__irq_stack_size = __irq_stack_size);
+PROVIDE(__supervisor_stack_size = __supervisor_stack_size);
+PROVIDE(__abort_stack_size = __abort_stack_size);
+PROVIDE(__undefined_stack_size = __undefined_stack_size);
 
 /*
 +=============================================================================+
@@ -44,8 +49,8 @@ PROVIDE(__process_stack_size = __process_stack_size);
 
 MEMORY
 {
-	rom (rx)	: org = 0x08000000, len = 128k
-	ram (rwx)	: org = 0x20000000, len = 20k
+	rom (rx)	: org = 0x00000000, len = 32k
+	ram (rwx)	: org = 0x40000000, len = 8k
 }
 
 __rom_start = ORIGIN(rom);
@@ -183,24 +188,64 @@ SECTIONS
 		PROVIDE(__stack_start = __stack_start);
 
 		. = ALIGN(8);
-		__main_stack_start = .;
-		PROVIDE(__main_stack_start = __main_stack_start);
+		__user_system_stack_start = .;
+		PROVIDE(__user_system_stack_start = __user_system_stack_start);
 
-		. += __main_stack_size;
-
-		. = ALIGN(8);
-		__main_stack_end = .;
-		PROVIDE(__main_stack_end = __main_stack_end);
+		. += __user_system_stack_size;
 
 		. = ALIGN(8);
-		__process_stack_start = .;
-		PROVIDE(__process_stack_start = __process_stack_start);
-
-		. += __process_stack_size;
+		__user_system_stack_end = .;
+		PROVIDE(__user_system_stack_end = __user_system_stack_end);
 
 		. = ALIGN(8);
-		__process_stack_end = .;
-		PROVIDE(__process_stack_end = __process_stack_end);
+		__fiq_stack_start = .;
+		PROVIDE(__fiq_stack_start = __fiq_stack_start);
+
+		. += __fiq_stack_size;
+
+		. = ALIGN(8);
+		__fiq_stack_end = .;
+		PROVIDE(__fiq_stack_end = __fiq_stack_end);
+		
+		. = ALIGN(8);
+		__irq_stack_start = .;
+		PROVIDE(__irq_stack_start = __irq_stack_start);
+
+		. += __irq_stack_size;
+
+		. = ALIGN(8);
+		__irq_stack_end = .;
+		PROVIDE(__irq_stack_end = __irq_stack_end);
+		
+		. = ALIGN(8);
+		__supervisor_stack_start = .;
+		PROVIDE(__supervisor_stack_start = __supervisor_stack_start);
+
+		. += __supervisor_stack_size;
+
+		. = ALIGN(8);
+		__supervisor_stack_end = .;
+		PROVIDE(__supervisor_stack_end = __supervisor_stack_end);
+		
+		. = ALIGN(8);
+		__abort_stack_start = .;
+		PROVIDE(__abort_stack_start = __abort_stack_start);
+
+		. += __abort_stack_size;
+
+		. = ALIGN(8);
+		__abort_stack_end = .;
+		PROVIDE(__abort_stack_end = __abort_stack_end);
+		
+		. = ALIGN(8);
+		__undefined_stack_start = .;
+		PROVIDE(__undefined_stack_start = __undefined_stack_start);
+
+		. += __undefined_stack_size;
+
+		. = ALIGN(8);
+		__undefined_stack_end = .;
+		PROVIDE(__undefined_stack_end = __undefined_stack_end);		
 
 		. = ALIGN(8);
 		__stack_end = .;
